@@ -1,0 +1,7 @@
+{
+  "input_folder": "//home/edu/Vídeos/sitio_mae",
+  "output_folder": "//home/edu/Vídeos/sitio_mae",
+  "output_filename": "sitio_mae.mp4",
+  "cleanup_temp_files": true,
+  "verbose": true
+}

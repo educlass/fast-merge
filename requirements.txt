@@ -1,0 +1,12 @@
+# FastMerge - Dependências Python
+# Nota: FFmpeg precisa estar instalado no sistema
+
+# O projeto usa apenas bibliotecas padrão do Python 3.6+
+# Não há dependências externas do Python necessárias
+
+# Para instalar o FFmpeg:
+# Ubuntu/Debian: sudo apt install ffmpeg
+# Fedora: sudo dnf install ffmpeg
+# Arch: sudo pacman -S ffmpeg
+# macOS: brew install ffmpeg
+# Windows: Baixe de https://ffmpeg.org/download.html
