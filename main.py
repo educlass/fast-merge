@@ -193,7 +193,7 @@ class FastMerge:
                         "ffprobe",
                         "-v", "error",
                         "-select_streams", "v:0",
-                        "-show_entries", "stream=width,height",
+                        "-show_entries", "stream=width,height,display_aspect_ratio:stream_tags=rotate",
                         "-of", "json",
                         str(video)
                     ],
@@ -208,21 +208,54 @@ class FastMerge:
                     width = stream.get("width")
                     height = stream.get("height")
                     
-                    # Chave de resolução
-                    resolution_key = f"{width}x{height}"
+                    # Verifica metadados de rotação
+                    rotation = 0
+                    if "tags" in stream and "rotate" in stream["tags"]:
+                        rotation = int(stream["tags"]["rotate"])
                     
-                    # Detecta orientação
-                    orientation = "landscape" if width > height else "portrait"
+                    # Analisa orientação real (considerando rotação)
+                    actual_width = width
+                    actual_height = height
+                    
+                    # Se rotação é 90 ou 270, inverte dimensões
+                    if rotation in [90, 270]:
+                        actual_width, actual_height = actual_height, actual_width
+                    
+                    # Calcula aspect ratio
+                    aspect_ratio = actual_width / actual_height
+                    
+                    # Determina orientação "intencional"
+                    # Portrait intencional: muito vertical (9:16 = 0.56, stories/reels)
+                    # Landscape intencional: padrão (16:9 = 1.77)
+                    # Quadrado: próximo de 1:1
+                    if aspect_ratio < 0.75:  # Claramente vertical (9:16, 9:18, etc)
+                        intended_orientation = "portrait"
+                        orientation_confidence = "alta"
+                    elif aspect_ratio > 1.4:  # Claramente horizontal (16:9, 16:10, etc)
+                        intended_orientation = "landscape"
+                        orientation_confidence = "alta"
+                    else:  # Zona ambígua (4:3, 3:4, etc) - pode estar errado
+                        intended_orientation = "landscape" if aspect_ratio > 1.0 else "portrait"
+                        orientation_confidence = "baixa"
+                    
+                    # Chave de resolução (usa dimensões REAIS após rotação)
+                    resolution_key = f"{actual_width}x{actual_height}"
                     
                     if resolution_key not in groups:
                         groups[resolution_key] = {
                             "videos": [],
-                            "width": width,
-                            "height": height,
-                            "orientation": orientation
+                            "width": actual_width,
+                            "height": actual_height,
+                            "orientation": intended_orientation,
+                            "confidence": orientation_confidence,
+                            "aspect_ratio": round(aspect_ratio, 2)
                         }
                     
-                    groups[resolution_key]["videos"].append(video)
+                    groups[resolution_key]["videos"].append({
+                        "path": video,
+                        "rotation": rotation,
+                        "needs_rotation_fix": rotation != 0
+                    })
             
             except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError) as e:
                 self._print_warning(f"Erro ao analisar {video.name}: {e}")
@@ -231,7 +264,13 @@ class FastMerge:
         self._print_success(f"📊 Encontrados {len(groups)} grupos de resolução:")
         for resolution, data in sorted(groups.items()):
             orientation_icon = "📱" if data["orientation"] == "portrait" else "🖥️"
-            print(f"  {orientation_icon} {resolution} ({data['orientation']}): {len(data['videos'])} vídeos")
+            confidence_icon = "✅" if data["confidence"] == "alta" else "⚠️"
+            
+            videos_with_rotation = sum(1 for v in data["videos"] if v["needs_rotation_fix"])
+            rotation_info = f" ({videos_with_rotation} com rotação)" if videos_with_rotation > 0 else ""
+            
+            print(f"  {orientation_icon} {resolution} ({data['orientation']}) - AR: {data['aspect_ratio']} {confidence_icon}{rotation_info}")
+            print(f"     {len(data['videos'])} vídeos")
         
         return groups
     
@@ -404,7 +443,7 @@ class FastMerge:
         if len(groups) == 1:
             self._print_info("🎯 Apenas uma resolução detectada - processando normalmente...")
             resolution = list(groups.keys())[0]
-            group_videos = groups[resolution]["videos"]
+            group_videos = [v["path"] for v in groups[resolution]["videos"]]
             
             # Gera manifesto
             if not self.generate_manifest(group_videos):
@@ -450,17 +489,29 @@ class FastMerge:
             self._print_info(f"📁 Pasta de saída: {resolution_folder}")
             self._print_info(f"📄 Arquivo: {output_filename}")
             
+            # Mostra info sobre orientação
+            if data["confidence"] == "baixa":
+                self._print_warning(f"⚠️  Confiança baixa na orientação (AR: {data['aspect_ratio']}) - pode estar rotacionado incorretamente")
+            
+            # Conta vídeos com rotação nos metadados
+            videos_with_rotation = sum(1 for v in data["videos"] if v["needs_rotation_fix"])
+            if videos_with_rotation > 0:
+                self._print_info(f"🔄 {videos_with_rotation} vídeo(s) com metadados de rotação detectados")
+            
             # Gera manifesto temporário para este grupo
             temp_manifest_group = Path(f"inputs_{resolution}.txt")
             
             try:
                 with open(temp_manifest_group, 'w', encoding='utf-8') as f:
-                    for video in data["videos"]:
-                        abs_path = video.resolve()
+                    for video_data in data["videos"]:
+                        abs_path = video_data["path"].resolve()
                         escaped_path = str(abs_path).replace("'", "'\\''")
                         f.write(f"file '{escaped_path}'\n")
                 
                 # Constrói comando FFmpeg
+                # Nota: Em modo smart com stream copy, os metadados de rotação são preservados
+                # Players modernos (YouTube, VLC, Chrome) respeitam esses metadados automaticamente
+                
                 if self.force_audio_aac:
                     self._print_info("⚡ Usando stream copy (vídeo) + AAC (áudio)")
                     cmd = [

@@ -72,8 +72,37 @@ Por padrão (`force_audio_aac: true`), o FastMerge usa:
 ✅ **Inteligente** - Agrupa automaticamente por resolução  
 ✅ **Mantém qualidade** - Zero perda de qualidade (stream copy)  
 ✅ **Mantém orientação** - Vídeos verticais continuam verticais 📱  
+✅ **Detecta aspect ratio** - Identifica se vídeo é propositalmente vertical (9:16) ou horizontal (16:9)  
+✅ **Lê metadados de rotação** - Considera tags de rotação da câmera para agrupar corretamente  
 ✅ **Organizado** - Cria subpastas por resolução  
 ✅ **Naming automático** - Inclui resolução no nome do arquivo  
+
+### Como o FastMerge Decide a Orientação
+
+O programa analisa **dois fatores** para determinar a orientação correta:
+
+1. **Metadados de rotação** - Muitas câmeras (iPhone, Android) salvam tags `rotate=90` ou `rotate=270` no vídeo
+2. **Aspect ratio (proporção)** - Calcula a relação largura/altura:
+   - **< 0.75** (ex: 9:16 = 0.56) → Portrait intencional ✅ 📱 (Stories, Reels, TikTok)
+   - **> 1.4** (ex: 16:9 = 1.77) → Landscape intencional ✅ 🖥️ (YouTube tradicional)
+   - **Entre 0.75-1.4** (ex: 4:3, 3:4) → Zona ambígua ⚠️ (pode estar rotacionado por engano)
+
+**Exemplo de análise:**
+```
+📊 Encontrados 3 grupos de resolução:
+  🖥️  1920x1080 (landscape) - AR: 1.77 ✅
+     5 vídeos
+  📱 1080x1920 (portrait) - AR: 0.56 ✅ (2 com rotação)
+     3 vídeos
+  🖥️  640x480 (landscape) - AR: 1.33 ⚠️
+     2 vídeos
+```
+
+**O que significa "com rotação"?**
+- Vídeos com metadados `rotate=90` ou `270` são detectados
+- Os metadados são **preservados** no arquivo final
+- Players modernos (YouTube, VLC, Chrome) **respeitam automaticamente** essas tags
+- O vídeo aparecerá corretamente orientado sem perda de qualidade!  
 
 ### Exemplo Prático
 
@@ -120,6 +149,70 @@ Por padrão (`force_audio_aac: true`), o FastMerge usa:
 ```
 
 Pronto! O FastMerge faz o resto automaticamente. 🚀
+
+### 📱 Vídeos em Pé vs Deitados - Como o FastMerge Decide?
+
+**Problema comum:** Você grava vídeos no celular e alguns ficam "deitados" quando deveriam estar "em pé" (ou vice-versa).
+
+**A solução do FastMerge:** Análise inteligente automática!
+
+#### Como Funciona
+
+O FastMerge analisa cada vídeo e determina:
+
+1. **Lê os metadados da câmera** 
+   - iPhones e Androids salvam uma tag `rotate=90` ou `rotate=270` quando você filma de lado
+   - O FastMerge detecta isso e ajusta automaticamente!
+
+2. **Calcula o aspect ratio (proporção)**
+   - **9:16 (0.56)** → Claramente portrait intencional (Stories, Reels) 📱✅
+   - **16:9 (1.77)** → Claramente landscape intencional (YouTube) 🖥️✅  
+   - **4:3 ou 3:4** → Zona ambígua - pode estar errado ⚠️
+
+3. **Agrupa corretamente**
+   - Vídeos com mesma orientação REAL ficam juntos
+   - Mesmo que o arquivo esteja "deitado", se tem metadados de rotação, o FastMerge sabe!
+
+#### Exemplo Real
+
+```
+Seus vídeos:
+├── video1.MOV (1080x1920 portrait) 📱
+├── video2.MOV (1920x1080 landscape, mas rotate=90 nos metadados) 📱
+└── video3.MOV (1920x1080 landscape) 🖥️
+```
+
+**O que o FastMerge faz:**
+1. Detecta que `video2.MOV` tem `rotate=90`
+2. Inverte as dimensões: 1920x1080 → 1080x1920
+3. Agrupa `video1` e `video2` juntos (ambos portrait após rotação!)
+4. `video3` fica sozinho (landscape real)
+
+**Resultado final:**
+- Os vídeos verticais ficam JUNTOS e em pé 📱
+- Os vídeos horizontais ficam no grupo deles 🖥️
+- YouTube e players modernos respeitam automaticamente!
+
+#### E se o vídeo estiver errado mesmo?
+
+Se o vídeo foi filmado realmente errado (sem metadados de rotação) e está fisicamente deitado:
+- O FastMerge agrupa pela orientação física (como está o arquivo)
+- Você terá um grupo `1080x1920` e outro `1920x1080`
+- Assim você sabe quais vídeos estão cada orientação
+
+#### Tabela de Aspect Ratios Comuns
+
+| Resolução | Aspect Ratio | Tipo | Confiança | Uso Comum |
+|-----------|--------------|------|-----------|-----------|
+| 1080x1920 | 0.56 (9:16) | 📱 Portrait | ✅ Alta | Instagram Stories, Reels, TikTok |
+| 720x1280 | 0.56 (9:16) | 📱 Portrait | ✅ Alta | Stories, vídeos verticais |
+| 1920x1080 | 1.77 (16:9) | 🖥️ Landscape | ✅ Alta | YouTube, TV, cinema |
+| 1280x720 | 1.77 (16:9) | 🖥️ Landscape | ✅ Alta | YouTube HD |
+| 640x480 | 1.33 (4:3) | 🖥️ Landscape | ⚠️ Baixa | Câmeras antigas, pode estar errado |
+| 480x640 | 0.75 (3:4) | 📱 Portrait | ⚠️ Baixa | Pode estar rotacionado incorretamente |
+
+**Confiança Alta (✅):** FastMerge tem certeza da orientação intencional  
+**Confiança Baixa (⚠️):** Pode estar rotacionado por engano - verifique os vídeos!
 
 ### 🔄 Modo Re-encode Completo (Para Vídeos Incompatíveis)
 
