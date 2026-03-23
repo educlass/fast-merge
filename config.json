@@ -1,7 +1,7 @@
 {
-  "input_folder": "/home/edu/Vídeos/2016-06_edu",
-  "output_folder": "/home/edu/Vídeos/2016-06_edu",
-  "output_filename": "2016-06_viagem_cortes.mp4",
+  "input_folder": "/home/edu/Vídeos/2016-06_CALIFORNIA_CEL_2",
+  "output_folder": "/home/edu/Vídeos/2016-06_CALIFORNIA_CEL_2",
+  "output_filename": "2016-06_CALIFORNIA_CEL_2.mp4",
   "cleanup_temp_files": true,
   "verbose": true,
   "force_audio_aac": false,
