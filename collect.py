@@ -4,22 +4,64 @@ from pathlib import Path
 
 # --- CONFIGURAÇÃO ---
 PASTA_RAIZ = Path("/mnt/Edu")
-PASTA_HD = PASTA_RAIZ / Path("Eduardo/Mae/Sitio - Videos/") # Ajuste para o ponto de montagem do seu HD
-DESTINO = Path("/home/edu/Vídeos/sitio_mae")  # Pasta de destino para os arquivos copiados
+PASTA_HD = PASTA_RAIZ / Path("backup/minhas imagens/2016/viagem/fotos videos camera do val/PRIVATE/AVCHD/BDMV/STREAM/") # Ajuste para o ponto de montagem do seu HD
+DESTINO = Path("/home/edu/Vídeos/2016-06_CALIFORNIA_CAM_VAL")  # Pasta de destino para os arquivos copiados
 
 # Cole sua lista de arquivos aqui (pode ser o caminho relativo que o 'find' deu)
 ARQUIVOS_PARA_COPIAR = """
-HPIM4312.AVI
-HPIM4313.AVI
-HPIM4314.AVI
-HPIM4322.AVI
-HPIM4325.AVI
-HPIM4371.AVI
-HPIM4378.AVI
-HPIM4389.AVI
-HPIM4390.AVI
-HPIM4392.AVI
-HPIM4395.AVI
+00019.MTS
+00000.MTS
+00001.MTS
+00002.MTS
+00003.MTS
+00004.MTS
+00005.MTS
+00006.MTS
+00007.MTS
+00008.MTS
+00009.MTS
+00010.MTS
+00011.MTS
+00012.MTS
+00013.MTS
+00014.MTS
+00015.MTS
+00016.MTS
+00017.MTS
+00018.MTS
+00020.MTS
+00021.MTS
+00022.MTS
+00023.MTS
+00024.MTS
+00025.MTS
+00026.MTS
+00027.MTS
+00028.MTS
+00029.MTS
+00030.MTS
+00031.MTS
+00032.MTS
+00033.MTS
+00034.MTS
+00035.MTS
+00036.MTS
+00037.MTS
+00038.MTS
+00039.MTS
+00040.MTS
+00041.MTS
+00042.MTS
+00043.MTS
+00044.MTS
+00045.MTS
+00046.MTS
+00047.MTS
+00048.MTS
+00049.MTS
+00050.MTS
+00051.MTS
+00052.MTS
 """
 
 def iniciar_copia():

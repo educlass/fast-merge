@@ -1,7 +1,11 @@
 {
-  "input_folder": "//home/edu/Vídeos/sitio_mae",
-  "output_folder": "//home/edu/Vídeos/sitio_mae",
-  "output_filename": "sitio_mae.mp4",
+  "input_folder": "/home/edu/Vídeos/2016-06_edu",
+  "output_folder": "/home/edu/Vídeos/2016-06_edu",
+  "output_filename": "2016-06_viagem_cortes.mp4",
   "cleanup_temp_files": true,
-  "verbose": true
+  "verbose": true,
+  "force_audio_aac": false,
+  "force_reencode": false,
+  "smart_mode": true,
+  "target_resolution": "1280x720"
 }

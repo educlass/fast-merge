@@ -1,0 +1,11 @@
+{
+  "input_folder": "./meus_clips",
+  "output_folder": "./output",
+  "output_filename": "video_final.mp4",
+  "cleanup_temp_files": true,
+  "verbose": true,
+  "force_audio_aac": true,
+  "force_reencode": false,
+  "smart_mode": false,
+  "target_resolution": "1920x1080"
+}
